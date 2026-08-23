@@ -108,6 +108,20 @@ This guarantees no transaction is ever silently ignored or wrongly
 auto-approved due to a data error — a broken input degrades to a safe 
 human-review state, not a crash or a false pass.
 
+## Explainability
+
+Each prediction includes a **SHAP-based explanation** (via 
+`shap.TreeExplainer`), showing the top contributing features for that 
+*specific* transaction — not just generic average feature importance. 
+Each value shows both magnitude and direction: positive values pushed 
+the prediction toward fraud, negative values pushed it toward normal.
+
+Because the dataset's features (V1-V28) are anonymized via PCA, these 
+explanations reference model features rather than real-world business 
+attributes (e.g., we cannot say "flagged due to unusual location" — 
+only "flagged due to V14, V10, V4," since that is what the data 
+actually supports).
+
 ## Limitations
 
 - Dataset features (V1-V28) are anonymized via PCA, so explanations 
