@@ -46,6 +46,15 @@ if st.button("Run batch of 55 transactions (5 deliberately corrupted)"):
 
     results_df = pd.DataFrame(batch_results)
 
+        # Persist audit log so it's inspectable, not just in-memory
+    audit_csv = results_df.to_csv(index=False)
+    st.download_button(
+        label="📥 Download audit log (CSV)",
+        data=audit_csv,
+        file_name="audit_log.csv",
+        mime="text/csv"
+    )
+    
     total = len(results_df)
     resolved = results_df[results_df['status'] == 'OK']
     exceptions = results_df[results_df['status'] != 'OK']
