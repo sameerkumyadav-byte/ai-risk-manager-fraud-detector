@@ -147,18 +147,43 @@ The live dashboard has two parts:
    it. The corrupted sample demonstrates the system safely escalating 
    to `MANUAL_REVIEW` instead of guessing.
 
-   ## How this addresses the judging criteria
+   ## AI Judgment: what uses ML, what doesn't, and why
 
-- **Problem taste**: Fraud detection is a direct, measurable merchant 
-  loss — not a speculative use case. We scoped to one loss type 
-  (transaction fraud) rather than trying to solve fraud, returns, and 
-  chargebacks all at once.
-- **Build quality**: Modular code (`model.py`, `risk_engine.py`, 
-  `run_batch.py`, `app.py`), 4 passing automated tests, and a live 
-  public deployment that runs end-to-end from a clean clone.
-- **AI judgment**: A Random Forest handles risk scoring; deterministic 
-  code handles the decision policy and safety checks. No LLM is used — 
-  documented above under "Why Random Forest, not a neural network."
-- **Failure recovery**: Missing/corrupted transaction data is never 
-  silently treated as safe. It is caught and escalated to 
-  `MANUAL_REVIEW`, verified both in the live app and in automated tests.
+**Where we use ML:**
+A Random Forest classifier produces the fraud risk score. This is a 
+tabular, structured-features problem (30 numeric columns) — exactly 
+the setting where tree-based models are the standard, well-justified 
+choice: fast to train, fast at inference (critical for a payment flow 
+where latency matters), and explainable via feature importances.
+
+**Where we deliberately did NOT use an LLM:**
+An LLM was deliberately not used anywhere in the core decision path. 
+Three concrete reasons:
+
+1. **Latency and cost**: fraud scoring needs to happen in milliseconds 
+   at payment time. An LLM call adds seconds of latency and real 
+   per-call cost, for a task a lightweight classifier already solves 
+   well.
+2. **No natural-language reasoning is required**: the input is 30 
+   numeric features, not text, transcripts, or documents. There is no 
+   unstructured content for an LLM to reason over — its core 
+   strength doesn't apply here.
+3. **Safety**: an LLM can hallucinate or be inconsistent. A financial 
+   risk decision needs to be deterministic and reproducible given the 
+   same input and threshold — a property classical ML plus a fixed 
+   policy threshold provides, and an LLM does not guarantee.
+
+**Where deterministic (non-ML) logic is used:**
+The decision boundary itself (`risk_score >= threshold → HIGH_RISK`) 
+is plain deterministic code, not learned or inferred — thresholds are 
+config, not a black box. Similarly, all failure handling (missing 
+fields, corrupted input) is deterministic try/except logic, not a 
+model decision — this guarantees safety-critical behavior can't 
+silently change if the model changes.
+
+**Where an LLM genuinely could add value (future work, not built here):**
+Summarizing a `MANUAL_REVIEW` case in plain language for a human 
+reviewer, or drafting a chargeback-evidence letter from the audit 
+record. We did not build this to keep the system's core financial 
+decision path deterministic, auditable, and free of hallucination risk 
+within this project's scope.
