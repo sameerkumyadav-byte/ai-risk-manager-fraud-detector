@@ -35,6 +35,30 @@ as explainable and auditable rather than a black box.
 | 0.5 | 0.961 | 0.745 | 73/98 | 3 |
 | 0.7 | 0.971 | 0.673 | 66/98 | 2 |
 
+### Business cost analysis (illustrative evaluation assumptions)
+
+We assign illustrative costs to each error type — NOT real Razorpay 
+pricing data — to reason about the threshold as a business decision, 
+not just a statistical one:
+
+- **False negative cost (₹122)**: average fraud amount lost when fraud 
+  is missed (proxy: average fraud transaction amount in this dataset)
+- **False positive cost (₹88)**: cost of wrongly blocking a legitimate 
+  transaction (proxy: average normal transaction amount, representing 
+  customer friction/lost sale)
+
+| Threshold | Precision | Recall | FP | FN | FP Cost | FN Cost | Total Cost |
+|---|---|---|---|---|---|---|---|
+| 0.2 | 0.857 | 0.857 | 14 | 14 | ₹1,232 | ₹1,708 | ₹2,940 |
+| **0.3** | **0.922** | **0.847** | **7** | **15** | **₹616** | **₹1,830** | **₹2,446** |
+| 0.5 | 0.961 | 0.745 | 3 | 25 | ₹264 | ₹3,050 | ₹3,314 |
+| 0.7 | 0.971 | 0.673 | 2 | 32 | ₹176 | ₹3,904 | ₹4,080 |
+
+**Threshold 0.3 minimizes total expected cost** under these assumptions 
+— it isn't an arbitrary choice, it's the option that balances catching 
+fraud against wrongly blocking legitimate customers most efficiently, 
+given the stated cost proxies.
+
 **Chosen threshold: 0.3** — captures nearly as much fraud as the most 
 aggressive setting (0.2) while cutting false alarms on legitimate 
 customers roughly in half (7 vs 14).
