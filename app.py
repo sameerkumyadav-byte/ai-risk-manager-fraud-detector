@@ -66,3 +66,53 @@ if st.button("Run batch of 55 transactions (5 deliberately corrupted)"):
     st.subheader("Top Model Signals")
     st.write("The model relies most heavily on these anonymized features:")
     st.dataframe(importances.head(5).rename("importance"))
+
+st.divider()
+st.header("🔍 Transaction Analyzer")
+st.caption("Simulates how a merchant or reviewer would check a single transaction.")
+
+# Find one clear fraud example and one clear normal example from the test set,
+# so the demo has a meaningful HIGH_RISK case to show (not just random rows)
+fraud_indices = y_test[y_test == 1].index[:1]
+normal_indices = y_test[y_test == 0].index[:1]
+
+sample_options = {
+    "Sample A — Typical transaction": normal_indices[0],
+    "Sample B — Known fraud case (from test data)": fraud_indices[0],
+    "Sample C — Corrupted transaction (missing data)": "corrupted"
+}
+
+choice = st.selectbox("Choose a transaction to analyze:", list(sample_options.keys()))
+
+if st.button("Analyze this transaction"):
+    selected = sample_options[choice]
+
+    if selected == "corrupted":
+        row = X_test.loc[normal_indices[0]].drop('V14')
+        true_label = int(y_test.loc[normal_indices[0]])
+    else:
+        row = X_test.loc[selected]
+        true_label = int(y_test.loc[selected])
+
+    result = evaluate_transaction(row, model, X_train.columns, importances, threshold=0.3)
+
+    st.subheader("Result")
+    decision_color = {
+        "LOW_RISK": "🟢",
+        "HIGH_RISK": "🔴",
+        "MANUAL_REVIEW": "🟡"
+    }
+    st.markdown(f"### {decision_color.get(result['decision'], '')} {result['decision']}")
+
+    col1, col2 = st.columns(2)
+    col1.metric("Risk Score", result['risk_score'] if result['risk_score'] is not None else "N/A")
+    col2.metric("Threshold Used", result['threshold_used'])
+
+    if result['status'] == 'OK':
+        st.write("**Top contributing signals:**")
+        st.json(result['top_signals'])
+    else:
+        st.error(f"System could not confidently evaluate this transaction.\n\nReason: {result['status']}")
+        st.write("**This is why it was safely escalated to MANUAL_REVIEW instead of guessing.**")
+
+    st.caption(f"(For reference — actual label in dataset: {'FRAUD' if true_label == 1 else 'NORMAL'})")
