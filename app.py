@@ -7,6 +7,8 @@ Run with: streamlit run app.py
 import random
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve, confusion_matrix, ConfusionMatrixDisplay
 
 from model import train_model
 from risk_engine import evaluate_transaction
@@ -116,3 +118,39 @@ if st.button("Analyze this transaction"):
         st.write("**This is why it was safely escalated to MANUAL_REVIEW instead of guessing.**")
 
     st.caption(f"(For reference — actual label in dataset: {'FRAUD' if true_label == 1 else 'NORMAL'})")
+
+st.divider()
+st.header("📊 Model Performance")
+st.caption("Measured on the held-out test set (never seen during training).")
+
+y_test_probs = model.predict_proba(X_test)[:, 1]
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Precision-Recall Curve")
+    precision_vals, recall_vals, thresholds = precision_recall_curve(y_test, y_test_probs)
+
+    fig1, ax1 = plt.subplots()
+    ax1.plot(recall_vals, precision_vals, color='#2ecc71')
+    ax1.set_xlabel("Recall")
+    ax1.set_ylabel("Precision")
+    ax1.set_title("Precision vs Recall (all thresholds)")
+    ax1.grid(True, alpha=0.3)
+    st.pyplot(fig1)
+
+with col2:
+    st.subheader("Confusion Matrix (threshold = 0.3)")
+    y_pred_at_threshold = (y_test_probs >= 0.3).astype(int)
+    cm = confusion_matrix(y_test, y_pred_at_threshold)
+
+    fig2, ax2 = plt.subplots()
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Normal", "Fraud"])
+    disp.plot(ax=ax2, cmap='Blues', colorbar=False)
+    st.pyplot(fig2)
+
+st.caption(
+    "The precision-recall curve shows the full tradeoff across all possible "
+    "thresholds. The confusion matrix shows the specific outcome at our "
+    "chosen threshold of 0.3, on the full held-out test set."
+)
