@@ -14,6 +14,7 @@ import datetime
 import pandas as pd
 import shap
 
+MODEL_VERSION = "fraud-rf-v1"
 audit_log = []
 
 
@@ -54,7 +55,6 @@ def evaluate_transaction(transaction_row, model, feature_columns, importances, t
 
         decision = "HIGH_RISK" if prob >= threshold else "LOW_RISK"
 
-        # Real per-transaction explanation via SHAP, not generic importance
         top_signals = get_shap_explanation(model, features, feature_columns)
 
         result = {
@@ -63,7 +63,8 @@ def evaluate_transaction(transaction_row, model, feature_columns, importances, t
             "risk_score": round(float(prob), 4),
             "threshold_used": threshold,
             "top_signals": top_signals,
-            "status": "OK"
+            "status": "OK",
+            "model_version": MODEL_VERSION
         }
 
     except Exception as e:
@@ -73,7 +74,8 @@ def evaluate_transaction(transaction_row, model, feature_columns, importances, t
             "risk_score": None,
             "threshold_used": threshold,
             "top_signals": None,
-            "status": f"ERROR: {str(e)}"
+            "status": f"ERROR: {str(e)}",
+            "model_version": MODEL_VERSION
         }
 
     audit_log.append(result)
