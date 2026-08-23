@@ -1,5 +1,9 @@
 # ai-risk-manager-fraud-detector
 
+
+**Live demo**: https://ai-risk-manager-fraud-detector-ggeywedineo9nfzg4vdk3r.streamlit.app/
+
+
 # AI Risk Manager — Fraud Detection Agent
 
 An agent that detects fraudulent credit card transactions in real-time, 
@@ -108,3 +112,10 @@ human-review state, not a crash or a false pass.
 
 This project is strictly detection/defense-focused. No content here 
 demonstrates how to evade fraud detection or replicate fraud patterns.
+
+## Testing
+
+Run `pytest -v` after installing dependencies. 4 tests verify core 
+decision logic and the critical safety guarantee that missing/broken 
+data always escalates to MANUAL_REVIEW, never silently passes as 
+LOW_RISK.
