@@ -28,6 +28,18 @@ as explainable and auditable rather than a black box.
 - **Threshold selection**: tested thresholds 0.2, 0.3, 0.5, 0.7 and 
   chose 0.3 based on a cost tradeoff (see Results)
 
+  ## Why Random Forest, not a neural network
+
+Fraud detection here is a tabular classification problem with ~30 
+numeric features and no sequential/image/text structure — the kind 
+of problem where tree-based models (Random Forest, XGBoost) reliably 
+match or beat deep learning, while being faster to train, faster to 
+run at inference time, and far easier to explain (via feature 
+importances) to a human reviewer. A neural network would add latency 
+and complexity a payment gateway can't afford, without a clear 
+accuracy benefit on this kind of data. This is a deliberate choice, 
+not a default.
+
 ## Results
 
 ### Threshold tradeoff (on 98 held-out fraud cases)
