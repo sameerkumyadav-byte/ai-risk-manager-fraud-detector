@@ -40,6 +40,30 @@ and complexity a payment gateway can't afford, without a clear
 accuracy benefit on this kind of data. This is a deliberate choice, 
 not a default.
 
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Transaction Input] --> B[Validation]
+    B -->|Valid| C[Random Forest Model]
+    B -->|Missing/Invalid Data| F[MANUAL_REVIEW]
+    C --> D[Risk Score 0-1]
+    D --> E{Policy Engine<br/>threshold = 0.3}
+    E -->|score < 0.3| G[LOW_RISK]
+    E -->|score >= 0.3| H[HIGH_RISK]
+    C --> I[SHAP Explanation]
+    G --> J[Audit Log]
+    H --> J
+    F --> J
+    I --> J
+```
+
+The pipeline separates concerns cleanly: a Random Forest model produces 
+a numeric risk score, a deterministic policy engine converts that score 
+into a decision, and every outcome — successful or failed — is recorded 
+in an auditable log. Broken or missing input never reaches the model; 
+it is caught by validation and routed straight to `MANUAL_REVIEW`.
+
 ## Results
 
 ### Threshold tradeoff (on 98 held-out fraud cases)
