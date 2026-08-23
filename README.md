@@ -131,3 +131,18 @@ Run `pytest -v` after installing dependencies. 4 tests verify core
 decision logic and the critical safety guarantee that missing/broken 
 data always escalates to MANUAL_REVIEW, never silently passes as 
 LOW_RISK.
+
+## Using the app
+
+The live dashboard has two parts:
+
+1. **Batch Report** — runs the risk engine across 55 test transactions 
+   (5 deliberately corrupted) and shows overall metrics: how many were 
+   LOW_RISK, HIGH_RISK, or escalated to MANUAL_REVIEW.
+
+2. **Transaction Analyzer** — simulates how a merchant or reviewer 
+   would check a single transaction. Pick a sample (a typical 
+   transaction, a known fraud case, or a corrupted one) and instantly 
+   see the risk decision, risk score, and the top model signals behind 
+   it. The corrupted sample demonstrates the system safely escalating 
+   to `MANUAL_REVIEW` instead of guessing.
