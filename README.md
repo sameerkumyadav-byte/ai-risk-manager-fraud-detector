@@ -146,3 +146,19 @@ The live dashboard has two parts:
    see the risk decision, risk score, and the top model signals behind 
    it. The corrupted sample demonstrates the system safely escalating 
    to `MANUAL_REVIEW` instead of guessing.
+
+   ## How this addresses the judging criteria
+
+- **Problem taste**: Fraud detection is a direct, measurable merchant 
+  loss — not a speculative use case. We scoped to one loss type 
+  (transaction fraud) rather than trying to solve fraud, returns, and 
+  chargebacks all at once.
+- **Build quality**: Modular code (`model.py`, `risk_engine.py`, 
+  `run_batch.py`, `app.py`), 4 passing automated tests, and a live 
+  public deployment that runs end-to-end from a clean clone.
+- **AI judgment**: A Random Forest handles risk scoring; deterministic 
+  code handles the decision policy and safety checks. No LLM is used — 
+  documented above under "Why Random Forest, not a neural network."
+- **Failure recovery**: Missing/corrupted transaction data is never 
+  silently treated as safe. It is caught and escalated to 
+  `MANUAL_REVIEW`, verified both in the live app and in automated tests.
